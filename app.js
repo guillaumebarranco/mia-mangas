@@ -4,22 +4,30 @@ const express = require('express');
 const app = express();
 const server = require('http').Server(app);
 
-const apiMangaUrl = 'http://localhost:2812';
+const apiMangaUrl = 'http://localhost:1208';
 const port = 2812;
 
-server.listen(port, () => {
-	console.log(`Mia Mangas API started on port ${port}`):
+app.use(function (req, res, next) {
+    res.setHeader('Access-Control-Allow-Origin', 'http://localhost:8080');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
+    res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type');
+    res.setHeader('Access-Control-Allow-Credentials', true);
+    next();
 });
 
-app.get('highscores', (req, res) => {
+server.listen(port, () => {
+	console.log(`Mia Mangas API started on port ${port}`);
+});
+
+app.get('/highscores', (req, res) => {
 
 	const minScore = req.query.min || 7;
 
 	axios.get(`${apiMangaUrl}/mangas/all`)
 	.then(response => {
 
-		const favouritesMangas = response.data
-		.filter(i => i.score > minScore)
+		const mangas = response.data
+		.filter(i => i._score > minScore)
 		.reduce((memo, item) => {
 			memo.push(item._source.manga.name);
 			return memo;
@@ -27,12 +35,12 @@ app.get('highscores', (req, res) => {
 
 		res.send({
 			status: 'success',
-			data: favouritesMangas
-		})
+			data: mangas
+		});
 	});
 });
 
-app.get('favourites', (req, res) => {
+app.get('/favourites', (req, res) => {
 
 	const total = req.query.total || 5;
 
